@@ -1,7 +1,5 @@
-cleancat
-========
-
-[![Build Status](https://travis-ci.org/closeio/cleancat.svg?branch=master)](https://travis-ci.org/closeio/cleancat)
+cleancat[![Build Status](https://circleci.com/gh/saurabh1e/cleancat.png?branch=master&style=shield)](https://circleci.com/gh/saurabh1e/cleancat)
+================================================================================================================================================
 
 Validation library for Python designed to be used with JSON REST frameworks
 
@@ -22,6 +20,6 @@ def test_view():
         data = schema.full_clean()
     except SchemaValidationError:
         return jsonify({'field-errors': schema.field_errors, 'errors': schema.errors }), 400
-        
+
     # Now "data" has the validated data
 ```
