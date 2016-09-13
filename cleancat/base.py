@@ -5,13 +5,16 @@ import sys
 from dateutil import parser
 
 if sys.version_info[0] == 3:
-    basestring = str
+    str = str
+
 
 class ValidationError(Exception):
     pass
 
+
 class StopValidation(Exception):
     pass
+
 
 class Field(object):
     base_type = None
@@ -39,7 +42,7 @@ class Field(object):
             raise ValidationError('Value must be of %s type.' % self.base_type.__name__)
 
         if not self.has_value(value):
-            if self.default != None:
+            if self.default is not None:
                 raise StopValidation(self.default)
 
             if self.required:
@@ -49,16 +52,17 @@ class Field(object):
 
         return value
 
+
 class String(Field):
-    base_type = basestring
+    base_type = str
     blank_value = ''
     min_length = None
     max_length = None
 
     def __init__(self, min_length=None, max_length=None, **kwargs):
-        if min_length != None:
+        if min_length is not None:
             self.min_length = min_length
-        if max_length != None:
+        if max_length is not None:
             self.max_length = max_length
         super(String, self).__init__(**kwargs)
 
@@ -77,8 +81,9 @@ class String(Field):
     def has_value(self, value):
         return bool(value)
 
+
 class TrimmedString(String):
-    base_type = basestring
+    base_type = str
     blank_value = ''
 
     def clean(self, value):
@@ -91,9 +96,11 @@ class TrimmedString(String):
     def has_value(self, value):
         return bool(value and value.strip())
 
+
 class Bool(Field):
     base_type = bool
     blank_value = False
+
 
 class Regex(String):
     regex = None
@@ -102,11 +109,11 @@ class Regex(String):
 
     def __init__(self, regex=None, regex_flags=None, regex_message=None, **kwargs):
         super(Regex, self).__init__(**kwargs)
-        if regex != None:
+        if regex is not None:
             self.regex = regex
-        if regex_flags != None:
+        if regex_flags is not None:
             self.regex_flags = regex_flags
-        if regex_message != None:
+        if regex_message is not None:
             self.regex_message = regex_message
 
     def get_regex(self):
@@ -120,9 +127,13 @@ class Regex(String):
 
         return value
 
+
 class DateTime(Regex):
     """ ISO 8601 from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/ """
-    regex = "^([\\+-]?\\d{4}(?!\\d{2}\\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$"
+    regex = "^([\\+-]?\\d{4}(?!\\d{2}\\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\" \
+            "d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])" \
+            "((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3])" \
+            ":?([0-5]\\d)?)?)?)?$"
     regex_message = 'Invalid ISO 8601 datetime.'
     blank_value = None
 
@@ -151,11 +162,13 @@ class DateTime(Regex):
             return dt
         return dt.date()
 
+
 class Email(Regex):
     regex = r'^.+@[^.].*\.[a-z]{2,63}$'
     regex_flags = re.IGNORECASE
     regex_message = 'Invalid email address.'
     max_length = 254
+
 
 class URL(Regex):
     blank_value = None
@@ -166,7 +179,7 @@ class URL(Regex):
         self.default_scheme = default_scheme
         if self.default_scheme and not self.default_scheme.endswith('://'):
             self.default_scheme += '://'
-        self.scheme_regex = re.compile('^'+scheme_part, re.IGNORECASE)
+        self.scheme_regex = re.compile('^' + scheme_part, re.IGNORECASE)
         if default_scheme:
             scheme_part = '(%s)?' % scheme_part
         regex = r'^%s([^/:]+%s|([0-9]{1,3}\.){3}[0-9]{1,3})(:[0-9]+)?(\/.*)?$' % (scheme_part, tld_part)
@@ -177,7 +190,7 @@ class URL(Regex):
         for sch in self.allowed_schemes:
             if not sch.endswith('://'):
                 sch += '://'
-            self.allowed_schemes_regexes.append(re.compile('^'+sch+'.*', re.IGNORECASE))
+            self.allowed_schemes_regexes.append(re.compile('^' + sch + '.*', re.IGNORECASE))
 
     def clean(self, value):
         if value == self.blank_value:
@@ -199,13 +212,16 @@ class URL(Regex):
 
         return value
 
+
 class RelaxedURL(URL):
     """Like URL but will just ignore values like "http://" and treat them as blank"""
+
     def clean(self, value):
         if not self.required and value == self.default_scheme:
             return None
         value = super(RelaxedURL, self).clean(value)
         return value
+
 
 class Integer(Field):
     base_type = int
@@ -226,6 +242,7 @@ class Integer(Field):
         value = super(Integer, self).clean(value)
         self._check_value(value)
         return value
+
 
 class List(Field):
     base_type = list
@@ -266,11 +283,13 @@ class List(Field):
 
         return data
 
+
 class Dict(Field):
     base_type = dict
 
     def has_value(self, value):
         return bool(value)
+
 
 class Embedded(Dict):
     def __init__(self, schema_class, **kwargs):
@@ -294,6 +313,7 @@ class Embedded(Dict):
         else:
             return True
 
+
 class Choices(Field):
     def __init__(self, choices, case_insensitive=False, error_invalid_choice=None, **kwargs):
         super(Choices, self).__init__(**kwargs)
@@ -312,8 +332,8 @@ class Choices(Field):
         if self.case_insensitive:
             choices = {choice.lower(): choice for choice in choices}
 
-            if not isinstance(value, basestring):
-                raise ValidationError(u'Value needs to be a string.')
+            if not isinstance(value, str):
+                raise ValidationError('Value needs to be a string.')
 
             if value.lower() not in choices:
                 raise ValidationError(self.error_invalid_choice.format(value=value))
@@ -325,12 +345,14 @@ class Choices(Field):
 
         return value
 
+
 # TODO move to separate module
 class MongoEmbedded(Embedded):
     """
     Represents an embedded document. Expects the document contents as input.
     Example document: EmbeddedDocumentField(Doc)
     """
+
     def __init__(self, document_class=None, *args, **kwargs):
         self.document_class = document_class
         super(MongoEmbedded, self).__init__(*args, **kwargs)
@@ -338,6 +360,7 @@ class MongoEmbedded(Embedded):
     def clean(self, value):
         value = super(MongoEmbedded, self).clean(value)
         return self.document_class(**value)
+
 
 class MongoEmbeddedReference(MongoEmbedded):
     """
@@ -355,10 +378,10 @@ class MongoEmbeddedReference(MongoEmbedded):
     {'id': 'non-existing_id', 'foo': 'bar'} -> invalid
     {'foo': 'bar'} -> valid
     """
+
     def __init__(self, *args, **kwargs):
         self.pk_field = kwargs.pop('pk_field', 'id')
         super(MongoEmbeddedReference, self).__init__(*args, **kwargs)
-
 
     def clean(self, value):
         value = super(Embedded, self).clean(value)
@@ -372,17 +395,17 @@ class MongoEmbeddedReference(MongoEmbedded):
             except self.document_class.DoesNotExist:
                 raise ValidationError('Object does not exist.')
             except MongoValidationError as e:
-                raise ValidationError(unicode(e))
+                raise ValidationError(str(e))
             else:
                 value = Dict.clean(self, value)
-                if hasattr(document, 'to_dict'): # support mongomallard
+                if hasattr(document, 'to_dict'):  # support mongomallard
                     document_data = document.to_dict()
                 else:
                     document_data = document._data.copy()
                 if None in document_data:
                     del document_data[None]
                 value = self.schema_class(value, document_data).full_clean()
-                for field_name, field_value in value.items():
+                for field_name, field_value in list(value.items()):
                     if field_name != self.pk_field:
                         setattr(document, field_name, field_value)
                 return document
@@ -391,13 +414,14 @@ class MongoEmbeddedReference(MongoEmbedded):
             value = self.schema_class(value).full_clean()
             return self.document_class(**value)
 
+
 class MongoReference(Field):
     """
     Represents a reference. Expects the ID as input.
     Example document: ReferenceField(Doc)
     """
 
-    base_type = basestring
+    base_type = str
 
     def __init__(self, document_class=None, **kwargs):
         self.document_class = document_class
@@ -410,14 +434,13 @@ class MongoReference(Field):
         except self.document_class.DoesNotExist:
             raise ValidationError('Object does not exist.')
 
+
 class Schema(object):
     def __init__(self, raw_data=None, data=None):
-        conflicting_fields = set([
-            'raw_data', 'orig_data', 'data', 'errors', 'field_errors', 'fields'
-        ]).intersection(dir(self))
+        conflicting_fields = {'raw_data', 'orig_data', 'data', 'errors', 'field_errors', 'fields'}.intersection(dir(self))
         if conflicting_fields:
             raise Exception('The following field names are reserved and need to be renamed: %s. '
-                'Please use the field_name keyword to use them.' % list(conflicting_fields))
+                            'Please use the field_name keyword to use them.' % list(conflicting_fields))
 
         self.raw_data = raw_data or {}
         self.orig_data = data or None
@@ -438,10 +461,10 @@ class Schema(object):
     def full_clean(self):
         if not isinstance(self.raw_data, dict):
             raise ValidationError({
-                'errors': [ 'Invalid request: JSON dictionary expected.' ]
+                'errors': ['Invalid request: JSON dictionary expected.']
             })
 
-        for field_name, field in self.fields.items():
+        for field_name, field in list(self.fields.items()):
             raw_field_name = field.raw_field_name or field_name
             try:
                 # Validate a field if it's posted in raw_data, or if we don't

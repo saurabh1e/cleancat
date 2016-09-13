@@ -1,2 +1,3 @@
+-e git://github.com/saurabh1e/mongoengine.git#egg=mongoengine
 python-dateutil
 pytz
