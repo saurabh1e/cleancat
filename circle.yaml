@@ -1,0 +1,13 @@
+machine:
+    python:
+        version: 3.4.5
+
+dependencies:
+    pre:
+        - pip install -r requirements.txt
+
+test:
+    pre:
+        - python setup.py build
+        - python setup.py test
+
